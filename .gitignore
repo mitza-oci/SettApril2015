@@ -1,0 +1,6 @@
+*~
+*.bak
+*.o
+*.html
+*.exe
+styles/

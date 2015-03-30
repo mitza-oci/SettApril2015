@@ -28,13 +28,13 @@ NUL           = nul
 MKDIR         = mkdir
 TESTDIRSTART  = if not exist
 TESTDIREND    = 
-TOUCH         = compat\touch.pl
+TOUCH         = touch
 EXEEXT        = .exe
 LIBPREFIX     = 
 LIBSUFFIX     = d
 GENFLAGS      = -g
 LDLIBS        = "../gtest-1.7.0/make/gtest_main.a" -lwsock32 -lnetapi32
-OBJS          = obj/BigInt$(OBJEXT) obj/TestBigInt$(OBJEXT)
+OBJS          = BigInt$(OBJEXT) TestBigInt$(OBJEXT)
 SRC           = BigInt.cpp TestBigInt.cpp
 LINK.cc       = $(LD) $(LDFLAGS)
 EXPORTFLAGS   = 
@@ -65,13 +65,13 @@ NUL           = nul
 MKDIR         = mkdir
 TESTDIRSTART  = if not exist
 TESTDIREND    = 
-TOUCH         = compat\touch.pl
+TOUCH         = touch
 EXEEXT        = .exe
 LIBPREFIX     = 
 LIBSUFFIX     = 
 GENFLAGS      = -O
 LDLIBS        = "../gtest-1.7.0/make/gtest_main.a" -lwsock32 -lnetapi32
-OBJS          = obj/BigInt$(OBJEXT) obj/TestBigInt$(OBJEXT)
+OBJS          = BigInt$(OBJEXT) TestBigInt$(OBJEXT)
 SRC           = BigInt.cpp TestBigInt.cpp
 LINK.cc       = $(LD) $(LDFLAGS)
 EXPORTFLAGS   = 
@@ -91,12 +91,10 @@ $(BIN): $(OBJS) $(DEPLIBS)
 generated: $(GENERATED_DIRTY)
 	@-:
 
-obj/BigInt$(OBJEXT): BigInt.cpp
-	@$(TESTDIRSTART) "obj/" $(TESTDIREND) $(MKDIR) "obj/"
+BigInt$(OBJEXT): BigInt.cpp
 	$(COMPILE.cc) $(EXPORTFLAGS) $(OUTPUT_OPTION) BigInt.cpp
 
-obj/TestBigInt$(OBJEXT): TestBigInt.cpp
-	@$(TESTDIRSTART) "obj/" $(TESTDIREND) $(MKDIR) "obj/"
+TestBigInt$(OBJEXT): TestBigInt.cpp
 	$(COMPILE.cc) $(EXPORTFLAGS) $(OUTPUT_OPTION) TestBigInt.cpp
 
 clean:
@@ -104,7 +102,6 @@ clean:
 
 realclean: clean
 	-$(RM) $(BIN)
-	-$(RM) obj/
 
 check-syntax:
 	$(COMPILE.cc) $(EXPORTFLAGS) -Wall -Wextra -pedantic -fsyntax-only $(CHK_SOURCES)
@@ -115,6 +112,6 @@ check-syntax:
 
 
 depend:
-	-set "VDIR=obj/"& $(MPC_ROOT)/depgen.pl -t make $(CFLAGS) $(CCFLAGS) $(CPPFLAGS) -f $(DEPENDENCIES) $(SRC) 2> $(NUL)
+	-$(MPC_ROOT)/depgen.pl -t make $(CFLAGS) $(CCFLAGS) $(CPPFLAGS) -f $(DEPENDENCIES) $(SRC) 2> $(NUL)
 
 -include $(DEPENDENCIES)

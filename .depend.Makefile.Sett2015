@@ -1,7 +1,10 @@
 # DO NOT DELETE THIS LINE -- depgen.pl uses it.
 # DO NOT PUT ANYTHING AFTER THIS LINE, IT WILL GO AWAY.
 
-obj/TestBigInt.o: \
+BigInt.o: \
+  ./BigInt.h
+
+TestBigInt.o: \
   ../gtest-1.7.0/include/gtest/gtest-death-test.h \
   ../gtest-1.7.0/include/gtest/gtest-message.h \
   ../gtest-1.7.0/include/gtest/gtest-param-test.h \
