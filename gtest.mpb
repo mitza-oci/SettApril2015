@@ -1,0 +1,4 @@
+project {
+  includes += ../gtest-1.7.0/include
+  pure_libs += ../gtest-1.7.0/make/gtest_main.a
+}
