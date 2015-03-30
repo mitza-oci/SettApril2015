@@ -7,7 +7,7 @@
 # this file will be lost the next time it is generated.
 #
 # MPC Command:
-# C:\oci\MPC\mwc.pl -type make -value_template platforms=mingw -value_template "configurations=Debug Release" -value_template delete=del -value_template "compilerflags=-std=c++1y -Wall"
+# ../MPC/mwc.pl -type make -value_template "configurations=Debug Release" -value_template "compilerflags=-std=c++1y -Wall" -value_template "platforms=linux mingw" -value_template mingw::delete=del
 #
 #----------------------------------------------------------------------------
 

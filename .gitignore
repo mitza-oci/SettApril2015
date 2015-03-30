@@ -1,6 +1,7 @@
-*~
 *.bak
-*.o
-*.html
 *.exe
+*.html
+*.o
+*~
+/Sett2015
 styles/
