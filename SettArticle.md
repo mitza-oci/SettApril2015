@@ -283,7 +283,7 @@ Converting to a string makes use of std::accumulate for string concatenation ins
 	
 	std::ostream& operator<<(std::ostream& os, const BigInt& bi)
 	{
-	  return os << std::string{bi};
+	  return os << std::string(bi);
 	}
 
 The literal operator and stream insertion operators merely adapt the existing "from" and "to" string conversions for convenient use.  Examples can be seen in the unit tests:

@@ -166,5 +166,5 @@ BigInt operator""_bi(const char* str)
 
 std::ostream& operator<<(std::ostream& os, const BigInt& bi)
 {
-  return os << std::string{bi};
+  return os << std::string(bi);
 }
