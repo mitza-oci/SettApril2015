@@ -99,7 +99,7 @@ Converting from a BigInt to an integer (in this case, an unsigned long long int)
 
 Constructing a BigInt object from an integer ("num") uses a standard library function called generate.  Like many other standard library functions known as "algorithms," generate takes iterators as its first two parameters.  Those two iterators define a range of elements to operate on.  Because the built-in integers provide an easy way to examine their least significant digits (via the modulo operator %), this constructor will traverse the value_ array backwards, from index 15 (least significant) to index 0 (most significant).  The reversed traversal is accomplished by using rbegin and rend methods instead of the usual begin and end.
 
-The third parameter to generate is a lambda function.  Generate will execute this function once per element in the range, and assign the result of the lambda to the element.  The lambda is introduced by the symbols [&]() (TODO: markdown).  [&] indicates that this lambda may capture local objects by reference.  In this case, num is captured since it is mentioned within the lambda body.  () indicates that the lambda receives no arguments from its caller (which in this case is the implementation of generate).  The body of the lambda returns a packed representation of the value 0-99 that can be stored within one octet (byte).  Note that the object num from the outer scope is modified each time the lambda function is invoked.  The type of octet is deduced by the compiler (using the *auto* keyword).  This reduces the chance for type-mismatch errors.
+The third parameter to generate is a lambda function.  Generate will execute this function once per element in the range, and assign the result of the lambda to the element.  Lambdas start with two lists, a capture list in brackets and a parameter list in parentheses.   In this case [&] indicates that the lambda may capture local objects by reference -- here num is captured since it is mentioned within the lambda body.  () indicates that the lambda receives no arguments from its caller (which in this case is the implementation of generate).  The body of the lambda returns a packed representation of the value 0-99 that can be stored within one octet (byte).  Note that the object num from the outer scope is modified each time the lambda function is invoked.  The type of octet is deduced by the compiler (using the *auto* keyword).  This reduces the chance for type-mismatch errors.
     
     BigInt::operator unsigned long long() const
     {
@@ -126,6 +126,8 @@ The following snippet shows a unit test (using Google Test a.k.a. "gtest") verif
       }
       EXPECT_EQ(start, (unsigned long long)b);
     }
+
+In this unit test the object "b" is constructed from "start" using the new C++2011 uniform initialization syntax with braces instead of parentheses.
 
 ## Per-digit Indexing ##
 
