@@ -3,10 +3,10 @@
 <head>
     <meta charset="utf-8">
 
-    <meta name="description" content="Introduction to C++2011/2014 for non-C++ programmers"/>
+    <meta name="description" content="Introduction to C++2011/2014 for non-C++ Programmers"/>
     <meta name="keywords" content="SETT, OCI, C++, C++2011, C++2014, Functional, Generic"/>
     <meta name="author" content="Adam Mitz"/>
-    <title>SETT April 2015 - Introduction to C++2011/2014 for non-C++ programmers</title>
+    <title>SETT April 2015 - Introduction to C++2011/2014 for non-C++ Programmers</title>
 
     <link rel="alternate" type="application/rss+xml" title="RSS" href="http://ociweb.com/sett/rss.xml"/>
     <link href="styles/SETT.css" rel="stylesheet" type="text/css"/>
@@ -19,7 +19,7 @@
 <body>
 <!--#include virtual="header.shtml" -->
 
-<h1>Introduction to C++2011/2014 for non-C++ programmers</h1>
+<h1>Introduction to C++2011/2014 for non-C++ Programmers</h1>
 
 <p class="author">
     by<br/>
@@ -126,7 +126,7 @@ BigInt::BigInt(unsigned long long num)
 </pre>
 
 <p>Constructing a BigInt object from an integer (&quot;num&quot;) uses a standard library function called generate.  Like many other standard library functions known as &quot;algorithms,&quot; generate takes iterators as its first two parameters.  Those two iterators define a range of elements to operate on.  Because the built-in integers provide an easy way to examine their least significant digits (via the modulo operator <code>%</code>), this constructor will traverse the value_ array backwards, from index 15 (least significant) to index 0 (most significant).  The reversed traversal is accomplished by using <code>rbegin</code> and <code>rend</code> methods instead of the usual <code>begin</code> and <code>end</code>.</p>
-<p>The third parameter to generate is a lambda function.  Generate will execute this function once per element in the range, and assign the result of the lambda to the element.  Lambdas start with two lists, a capture list in brackets and a parameter list in parentheses.   In this case <code>[&amp;]</code> indicates that the lambda may capture local objects by reference -- here num is captured since it is mentioned within the lambda body.  <code>()</code> indicates that the lambda receives no arguments from its caller (which in this case is the implementation of generate).  The body of the lambda returns a packed representation of the value 0-99 that can be stored within one octet (byte).  Note that the object num from the outer scope is modified each time the lambda function is invoked.  The type of octet is deduced by the compiler (using the <code>auto</code> keyword).  This reduces the chance for type-mismatch errors.</p>
+<p>The third parameter to generate is a lambda function.  Generate will execute this function once per element in the range, and assign the result of the lambda to the element.  Lambdas start with two lists, a capture list in brackets and a parameter list in parentheses.   In this case <code>[&amp;]</code> indicates that the lambda may capture local objects by reference -- here num is captured since it is mentioned within the lambda body.  <code>()</code> indicates that the lambda receives no arguments from its caller (which in this case is the implementation of generate).  The body of the lambda returns a packed representation of the value 0-99 that can be stored within one octet (byte).  Note that the object num from the outer scope is modified each time the lambda function is invoked.  The type of octet is deduced by the compiler (using the <code>auto</code> keyword).  This reduces the chance for type-mismatch errors.  <code>auto</code> can be used any time an object is declared and initialized in the same statement.  The type of the object is the type of the expression initializing it.</p>
 <pre class="brush: cpp">BigInt::operator unsigned long long() const
 {
   return std::accumulate(value_.begin(), value_.end(), 0ull,
@@ -191,7 +191,7 @@ BigInt::BigInt(unsigned long long num)
 }
 </pre>
 
-<p>When the caller uses <code>operator[]</code> on a non-const BigInt object, the value at that decimal digit may need to be changed (not just read).  Often this is an assignment statement with the <code>[]</code> on the left of the <code>=</code>.  To make this work, the <code>operator[]</code> needs to return a Proxy object.  The Proxy class is defined as a private nested class inside BigInt:</p>
+<p>When the caller uses <code>operator[]</code> on a non-const BigInt object, the value at that decimal digit may need to be changed (not just read).  Often this is an assignment statement with the <code>[]</code> on the left of the <code>=</code>.  To make this work, the <code>operator[]</code> needs to return a Proxy object.  Note that here (similar to the in-class initializer of value_) braces are used to initialize Proxy via its constructor.  This is called list initialization and it is similar to the pre-C++-2011 initialization with parentheses but it doesn't allow narrowing conversions.</p>  <p>The Proxy class is defined as a private nested class inside BigInt:</p>
 <pre class="brush: cpp">  enum class Nibble : char { LOW, HIGH };
 
   class Proxy {
@@ -341,7 +341,7 @@ TEST(Group1, Streaming)
 }
 </pre>
 
-<p>The standard library also provides a handful of user-defined literals which can be seen in use here: &quot;foo&quot;s is the <code>std::string</code> object containing &quot;foo&quot;.  User-defined literals that don't start with <code>_</code> are reserved for the standard library. </p>
+<p>The standard library also provides some literal operators, one of which can be seen in use here: &quot;foo&quot;s is the <code>std::string</code> object containing &quot;foo&quot;.  User-defined literals with suffixes that do not begin with <code>_</code> are reserved for the standard library.</p>
 <h2>Addition</h2>
 <p>Many math operations are possible with BigInt, but this article will be limited to addition.  The same techniques and mechanisms can be applied to other operations (which can use either operators or named methods).</p>
 <pre class="brush: cpp">// within the class definition:
