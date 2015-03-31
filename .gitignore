@@ -1,7 +1,7 @@
 *.bak
 *.exe
-*.html
 *.o
 *~
 /Sett2015
 styles/
+*runmpc.cmd

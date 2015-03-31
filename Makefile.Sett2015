@@ -1,7 +1,9 @@
 #----------------------------------------------------------------------------
 #       Macros
 #----------------------------------------------------------------------------
-CFG = linux Debug
+CFG = $(if $(findstring Windows_NT,$(OS)),mingw Debug,linux Debug)
+
+GTEST_ROOT = ../gtest-1.7.0
 
 ifeq ($(CFG), linux Debug)
 CC            = gcc
@@ -9,7 +11,7 @@ CXX           = g++
 LD            = $(CXX) $(CCFLAGS) $(CPPFLAGS)
 AR            = ar
 PICFLAGS      = -fPIC
-CPPFLAGS      = $(PICFLAGS) $(GENFLAGS) -std=c++1y -Wall -D_REENTRANT -I"../gtest-1.7.0/include"
+CPPFLAGS      = $(PICFLAGS) $(GENFLAGS) -std=c++1y -Wall -D_REENTRANT -I"$(GTEST_ROOT)/include"
 OBJEXT        = .o
 OUTPUT_OPTION = -o "$@"
 COMPILE.c     = $(CC) $(CFLAGS) $(CPPFLAGS) -c
@@ -33,7 +35,7 @@ EXEEXT        =
 LIBPREFIX     = lib
 LIBSUFFIX     = d
 GENFLAGS      = -g
-LDLIBS        = "../gtest-1.7.0/make/gtest_main.a" -ldl $(subst lib,-l,$(sort $(basename $(notdir $(wildcard /usr/lib/librt.so /lib/librt.so))))) -lpthread
+LDLIBS        = "$(GTEST_ROOT)/make/gtest_main.a" -ldl $(subst lib,-l,$(sort $(basename $(notdir $(wildcard /usr/lib/librt.so /lib/librt.so))))) -lpthread
 OBJS          = BigInt$(OBJEXT) TestBigInt$(OBJEXT)
 SRC           = BigInt.cpp TestBigInt.cpp
 LINK.cc       = $(LD) $(LDFLAGS)
@@ -46,7 +48,7 @@ CXX           = g++
 LD            = $(CXX) $(CCFLAGS) $(CPPFLAGS)
 AR            = ar
 PICFLAGS      = -fPIC
-CPPFLAGS      = $(PICFLAGS) $(GENFLAGS) -std=c++1y -Wall -D_REENTRANT -I"../gtest-1.7.0/include"
+CPPFLAGS      = $(PICFLAGS) $(GENFLAGS) -std=c++1y -Wall -D_REENTRANT -I"$(GTEST_ROOT)/include"
 OBJEXT        = .o
 OUTPUT_OPTION = -o "$@"
 COMPILE.c     = $(CC) $(CFLAGS) $(CPPFLAGS) -c
@@ -70,7 +72,7 @@ EXEEXT        =
 LIBPREFIX     = lib
 LIBSUFFIX     = 
 GENFLAGS      = -O
-LDLIBS        = "../gtest-1.7.0/make/gtest_main.a" -ldl $(subst lib,-l,$(sort $(basename $(notdir $(wildcard /usr/lib/librt.so /lib/librt.so))))) -lpthread
+LDLIBS        = "$(GTEST_ROOT)/make/gtest_main.a" -ldl $(subst lib,-l,$(sort $(basename $(notdir $(wildcard /usr/lib/librt.so /lib/librt.so))))) -lpthread
 OBJS          = BigInt$(OBJEXT) TestBigInt$(OBJEXT)
 SRC           = BigInt.cpp TestBigInt.cpp
 LINK.cc       = $(LD) $(LDFLAGS)
@@ -82,7 +84,7 @@ CC            = gcc
 CXX           = g++
 LD            = $(CXX) $(CCFLAGS) $(CPPFLAGS)
 AR            = ar
-CPPFLAGS      = $(PICFLAGS) $(GENFLAGS) -std=c++1y -Wall -I"../gtest-1.7.0/include"
+CPPFLAGS      = $(PICFLAGS) $(GENFLAGS) -std=c++1y -Wall -I"$(GTEST_ROOT)/include"
 OBJEXT        = .o
 OUTPUT_OPTION = -o "$@"
 COMPILE.c     = $(CC) $(CFLAGS) $(CPPFLAGS) -c
@@ -107,7 +109,7 @@ EXEEXT        = .exe
 LIBPREFIX     = 
 LIBSUFFIX     = d
 GENFLAGS      = -g
-LDLIBS        = "../gtest-1.7.0/make/gtest_main.a" -lwsock32 -lnetapi32
+LDLIBS        = "$(GTEST_ROOT)/make/gtest_main.a" -lwsock32 -lnetapi32
 OBJS          = BigInt$(OBJEXT) TestBigInt$(OBJEXT)
 SRC           = BigInt.cpp TestBigInt.cpp
 LINK.cc       = $(LD) $(LDFLAGS)
@@ -119,7 +121,7 @@ CC            = gcc
 CXX           = g++
 LD            = $(CXX) $(CCFLAGS) $(CPPFLAGS)
 AR            = ar
-CPPFLAGS      = $(PICFLAGS) $(GENFLAGS) -std=c++1y -Wall -I"../gtest-1.7.0/include"
+CPPFLAGS      = $(PICFLAGS) $(GENFLAGS) -std=c++1y -Wall -I"$(GTEST_ROOT)/include"
 OBJEXT        = .o
 OUTPUT_OPTION = -o "$@"
 COMPILE.c     = $(CC) $(CFLAGS) $(CPPFLAGS) -c
@@ -144,7 +146,7 @@ EXEEXT        = .exe
 LIBPREFIX     = 
 LIBSUFFIX     = 
 GENFLAGS      = -O
-LDLIBS        = "../gtest-1.7.0/make/gtest_main.a" -lwsock32 -lnetapi32
+LDLIBS        = "$(GTEST_ROOT)/make/gtest_main.a" -lwsock32 -lnetapi32
 OBJS          = BigInt$(OBJEXT) TestBigInt$(OBJEXT)
 SRC           = BigInt.cpp TestBigInt.cpp
 LINK.cc       = $(LD) $(LDFLAGS)

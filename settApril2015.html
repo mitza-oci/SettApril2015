@@ -1,0 +1,462 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="utf-8">
+
+    <meta name="description" content="Introduction to C++2011/2014 for non-C++ programmers"/>
+    <meta name="keywords" content="SETT, OCI, C++, C++2011, C++2014, Functional, Generic"/>
+    <meta name="author" content="Adam Mitz"/>
+    <title>SETT April 2015 - Introduction to C++2011/2014 for non-C++ programmers</title>
+
+    <link rel="alternate" type="application/rss+xml" title="RSS" href="http://ociweb.com/sett/rss.xml"/>
+    <link href="styles/SETT.css" rel="stylesheet" type="text/css"/>
+
+
+    <!--Used for syntax highlighting.  -->
+    <link href="http://alexgorbatchev.com/pub/sh/current/styles/shCore.css" rel="stylesheet" type="text/css"/>
+    <link href="http://alexgorbatchev.com/pub/sh/current/styles/shThemeDefault.css" rel="stylesheet" type="text/css"/>
+</head>
+<body>
+<!--#include virtual="header.shtml" -->
+
+<h1>Introduction to C++2011/2014 for non-C++ programmers</h1>
+
+<p class="author">
+    by<br/>
+
+    Adam Mitz, Principal Software Engineer
+    <br/>Object Computing, Inc. (OCI)
+</p>
+
+<h2>Introduction</h2>
+
+<p>
+C++ has been updated with two recent ISO specifications (published in 2011 and 2014) and today's compilers support many of the new features.  This article will demonstrate some of those features in a way that's approachable to software developers who aren't familiar with any version C++ (or haven't used it for a long time).
+</p>
+
+<h2>Why C++</h2>
+
+<p>
+C++ is a widely used high-level multi-paradigm programming language for system and application development.  C++ is used on all kinds of systems from small embedded chips to mobile devices, desktops, and in the data center.  Since C++ is supported on all platforms, it provides a way for a common core library to be shared between applications on different platforms (including iOS and Android). More background information on C++ can be found on <a href="http://www.stroustrup.com/C++.html">http://www.stroustrup.com/C++.html</a> and on <a href="http://isocpp.org">http://isocpp.org</a>.
+</p>
+
+<p>
+Bjarne Stroustrup, the creator of C++, summarized its overall design goals:</p>
+<ul>
+<li>C++’s evolution must be driven by real problems</li>
+<li>Don’t get involved in a sterile quest for perfection</li>
+<li>C++ must be useful now</li>
+<li>Every feature must have a reasonably obvious implementation</li>
+<li>Always provide a transition path</li>
+<li>C++ is a language, not a complete system</li>
+<li>Don’t try to force people to use a specific programming style</li>
+<li>Provide comprehensive support for each supported style </li>
+</ul>
+<p>See <a href="http://www.stroustrup.com/hopl-almost-final.pdf">http://www.stroustrup.com/hopl-almost-final.pdf</a> for more details on the initial design of C++.</p>
+<p>Unlike other high-level languages, C++ works with the Operating System platform instead of trying to abstract it away with a &quot;virtual machine&quot; or &quot;execution environment.&quot;  This gives developers the requisite control over all resource usage in the program (here &quot;resources&quot; include heap memory, files, network sockets, etc.).</p>
+<p>The evolution of C++ in the 2011 and 2014 specs used the following guidelines:</p>
+<dl>
+<dt>Make a better C++, not make it another language</dt>
+<dd>Improve support for systems programming and library building</dd>
+<dt>Make C++ easier to teach and learn</dt>
+<dd>Uniformity, stronger guarantees, help novices</dd>
+<dt>Keep compatibility as much as possible</dt>
+<dd>Not 100% compatible with old C++ (some new keywords)</dd>
+</dl>
+<p>Existing codebases written in pre-C++-2011 can be incrementally migrated to C++2011/2014 resulting in a more readable and maintainable project. 
+</p>
+
+<h2>Approaching C++2014</h2>
+
+<p>
+This article approaches C++2014 as a new language.  Although C++ has its historical roots in C, knowledge of C is not required for learning C++.  In fact, starting with C may bias the programmer to using certain styles and idioms that will compile just fine in C++ but are not best practices.  The following sections of this article walk through a real-world example and explain as much as possible.  All of the code snippets below come from the GitHub repository for this article at <a href="https://github.com/mitza-oci/SettApril2015">https://github.com/mitza-oci/SettApril2015</a> and was tested with the <a href="http://gcc.gnu.org/">GCC compiler</a> version 4.9.2.  Other compilers should work as well, but were not tested before publication.</p>
+<p>If you are new to C++, there will inevitably be some concepts or syntax that are unfamiliar.  I encourage you to keep reading and take a look at a few online resources to get your questions answered, such as Stack Overflow's <a href="http://stackoverflow.com/questions/tagged/c%2b%2b">C++ tag</a> or open an Issue at the GitHub site above.  Also please use the GitHub repository as a way to see the physical organization of the project (which code belongs in which file).  The three C++ files involved are BigInt.h (header file containing class definition and function declarations), BigInt.cpp (source code file containing function definitions), and TestBigInt.cpp (source code file for unit tests).
+</p>
+
+<h2>BigInt Class Overview</h2>
+
+
+<p>Fundamental integer types in C++ range in size from char (1 byte) to long long (8 bytes on most platforms).  An 8-byte unsigned integer can store values up to about 2*10^19.  Some programs need to store and manipulate larger values without resorting to inexact floating point.  We'll develop a BigInt class that can store up to 32 decimal digits in 16 bytes.  Our BigInt class is unsigned, but it could easily be enhanced to keep track of the sign.  A further extension would be to also keep track of scale (where the decimal point goes) which would turn our BigInt into a BigDecimal, also known as a fixed-point integer.</p>
+<p>Users of our BigInt class need not be concerned with the storage format (it's an implementation detail).  We'll use an array of 16 bytes.  Each byte in the array represents two decimal digits (packed BCD format).  Array index 0 stores the most significant two decimal digits, while array index 15 stores the least significant two digits.</p>
+<p>Since each byte stores two digits, we will need to use bitwise operators to manipulate the two digits in the two halves of the byte (these are known as nibbles).  Fortunately users of our class don't need to use any bitwise operators.  The low nibble will store the least significant digit of the pair.  The low nibble is values 0-15 of the byte, though we will only use 0-9 since we are storing a decimal digit.  The high nibble of the byte will store the more significant digit of the pair.  The high nibble is the left four bits of the byte, and can be retrieved by shifting right four bits <code>x &gt;&gt; 4</code>.</p>
+<p>The BigInt class definition:</p>
+<pre class="brush: cpp">
+// BigInt.h
+#include &lt;array&gt;
+
+class BigInt {
+public:
+  static const size_t MAX_DIGITS = 32;
+
+  BigInt();
+
+  // Other class members decscribed below...
+
+private:
+  std::array&lt;unsigned char, MAX_DIGITS / 2&gt; value_ = {};
+};
+</pre>
+
+<p>A <code>std::array</code> object stores the values of the digits.  <code>std::array</code> is a class template of two parameters: the type of each array element (here, unsigned char) and a non-type parameter indicating the number of elements.  To use <code>std::array</code>, the number of elements must be known at compile time.  Other containers like <code>std::vector</code> store a run-time-determined number of elements.</p>
+<p>Using <code>std::array</code> allows the BigInt class to not worry about any memory management issues.  Composing a class based on the standard library resource-managing types such as <code>array</code>, <code>vector</code>, <code>string</code>, <code>set</code>, <code>map</code>, <code>shared_ptr</code>, <code>and unique_ptr</code> is a recommended strategy for enforcing separation of concerns and good design.  Programmers can create their own resource-managing classes and only then do they need to worry about writing copy constructors, move constructors, copy assignment operators, move assignment operators, and destructors.  Each of these has certain technical requirements that a class developer needs to be aware of in order for the type to work with standard library types and code generated by the compiler.</p>
+<p>The one and only data member <code>value_</code> has an in-class initializer <code>= {}</code> which sets all array elements to 0 when objects of the BigInt class are constructed.</p>
+<p>The other members of the BigInt class shown above are the static constant <code>MAX_DIGITS</code> and the default constructor.  Default constructors are constructors that can be called with no arguments.  If no constructors are declared in the class definition, the compiler will add a default constructor automatically.  Since we will be adding other constructors shortly, the default constructor is declared here.  The definition of the default constructor (not shown) consists of an empty function body.</p>
+<h2>Converting to and from Integers</h2>
+<p>Users of the BigInt class can convert integers to BigInts and BigInts to integers.  Each of these conversions will be <code>explicit</code> (they will not be candidates for use in implicit conversions).</p>
+<pre class="brush: cpp">  // within the class definition:
+
+  explicit BigInt(unsigned long long num);
+
+  explicit operator unsigned long long() const;
+</pre>
+
+<p>Converting from an integer to a BigInt uses the constructor shown above.  Callers of this constructor may provide arguments of smaller integer types and those arguments will be implicitly converted to unsigned long long.</p>
+<p>Converting from a BigInt to an integer (in this case, an <code>unsigned long long int</code>) uses a conversion operator.  Like constructors, conversion operators have no return type and can be declared with the keyword <code>explicit</code>.  The name of the conversion operator is the keyword <code>operator</code> followed by the type that it converts to.  This particular conversion operator is a <code>const</code> member of the BigInt class since converting to an integer doesn't change the value of the BigInt object.</p>
+<pre class="brush: cpp">// In BigInt.cpp
+BigInt::BigInt(unsigned long long num)
+{
+  std::generate(value_.rbegin(), value_.rend(),
+                [&amp;]()
+                {
+                  const auto octet = num % 100;
+                  num /= 100;
+                  return (octet / 10) &lt;&lt; 4 | octet % 10;
+                });
+}
+</pre>
+
+<p>Constructing a BigInt object from an integer (&quot;num&quot;) uses a standard library function called generate.  Like many other standard library functions known as &quot;algorithms,&quot; generate takes iterators as its first two parameters.  Those two iterators define a range of elements to operate on.  Because the built-in integers provide an easy way to examine their least significant digits (via the modulo operator <code>%</code>), this constructor will traverse the value_ array backwards, from index 15 (least significant) to index 0 (most significant).  The reversed traversal is accomplished by using <code>rbegin</code> and <code>rend</code> methods instead of the usual <code>begin</code> and <code>end</code>.</p>
+<p>The third parameter to generate is a lambda function.  Generate will execute this function once per element in the range, and assign the result of the lambda to the element.  Lambdas start with two lists, a capture list in brackets and a parameter list in parentheses.   In this case <code>[&amp;]</code> indicates that the lambda may capture local objects by reference -- here num is captured since it is mentioned within the lambda body.  <code>()</code> indicates that the lambda receives no arguments from its caller (which in this case is the implementation of generate).  The body of the lambda returns a packed representation of the value 0-99 that can be stored within one octet (byte).  Note that the object num from the outer scope is modified each time the lambda function is invoked.  The type of octet is deduced by the compiler (using the <code>auto</code> keyword).  This reduces the chance for type-mismatch errors.</p>
+<pre class="brush: cpp">BigInt::operator unsigned long long() const
+{
+  return std::accumulate(value_.begin(), value_.end(), 0ull,
+                         [](auto result, auto val)
+                         {
+                           return result * 100 + (val &gt;&gt; 4) * 10 + (val &amp; 0xf);
+                         });
+}
+</pre>
+
+<p>Converting from a BigInt to an integer uses the accumulate algorithm from the standard library.  Accumulate is known as &quot;fold&quot; in most functional programming environments.  Like generate's, accumulate's parameter list starts with two iterators (this time, we use the forward traversal).  The next argument is the starting value, here the <code>ull</code> suffix after the literal 0 makes the type of this expression <code>unsigned long long</code>.  The return type of accumulate is determined by the type of this argument.  The final argument to accumulate is a lambda which captures no variables <code>[]</code> and takes two parameters (result and val).  Accumulate works by providing the lambda function the result so far and a new value.  The lambda returns back to accumulate the updated result.  After completing the iteration through the range, the result is returned back to accumulate's caller.</p>
+<p>The lambda reads each byte of the underlying value_ array (from most significant to least significant) and converts it from the packed BCD format to a normal binary unsigned number.  If the value_ stored doesn't fit in an unsigned long long, the result will &quot;wrap around&quot; back to 0 and keep accumulating from there.   </p>
+<p>The following snippet shows a unit test (using <a href="https://code.google.com/p/googletest/">Google Test</a> a.k.a. &quot;gtest&quot;) verifying the basic functionality of converting to and from integers:</p>
+<pre class="brush: cpp">TEST(Group1, ToAndFromInt)
+{
+  const auto start = 8765432109876543210ull;
+  const BigInt b{start};
+  for (auto i = 0u; i &lt; 19; ++i)
+  {
+    EXPECT_EQ(i % 10, b[i]);
+  }
+  EXPECT_EQ(start, (unsigned long long)b);
+}
+</pre>
+
+<p>In this unit test the object &quot;b&quot; is constructed from &quot;start&quot; using the new C++2011 uniform initialization syntax with braces instead of parentheses.</p>
+<h2>Per-digit Indexing</h2>
+<p>Users of the BigInt class will need a way to read and write values above what unsigned long long can represent.  BigInt allows this by providing overloaded <code>[]</code> (array subscript) operators.  The value in the brackets represents the decimal digit being accessed (0 is least significant, 31 is most significant).</p>
+<pre class="brush: cpp">  // within the class definition:
+
+  unsigned char operator[](size_t i) const;
+
+  Proxy operator[](size_t i);
+</pre>
+
+<p>Each of these operators will make use a helper function which is a private static member of the class:</p>
+<pre class="brush: cpp">size_t BigInt::indexof(size_t decimalPlace)
+{
+  return MAX_DIGITS / 2 - 1 - decimalPlace / 2;
+}
+</pre>
+
+<p>Indexof translates from the decimal place number (the i parameter to the operators) to the index of the value_ array where that decimal place is stored. </p>
+<pre class="brush: cpp">unsigned char BigInt::operator[](size_t i) const
+{
+  if (i &gt;= MAX_DIGITS)
+  {
+    throw std::out_of_range(&quot;BigInt::operator[]&quot;);
+  }
+  return (i % 2) ? value_[indexof(i)] &gt;&gt; 4 : (value_[indexof(i)] &amp; 0xf);
+}
+</pre>
+
+<p>The simpler of the two operators <code>[]</code> is called when the BigInt object is const.  In this case the value at digit index i is returned to the caller, and the caller can't modify it.  <code>unsigned char</code> can represent values 0-255 which is plenty since only 0-9 are possible.</p>
+<pre class="brush: cpp">BigInt::Proxy BigInt::operator[](size_t i)
+{
+  if (i &gt;= MAX_DIGITS)
+  {
+    throw std::out_of_range(&quot;BigInt::operator[]&quot;);
+  }
+  return Proxy{(i % 2) ? Nibble::HIGH : Nibble::LOW, value_[indexof(i)]};
+}
+</pre>
+
+<p>When the caller uses <code>operator[]</code> on a non-const BigInt object, the value at that decimal digit may need to be changed (not just read).  Often this is an assignment statement with the <code>[]</code> on the left of the <code>=</code>.  To make this work, the <code>operator[]</code> needs to return a Proxy object.  The Proxy class is defined as a private nested class inside BigInt:</p>
+<pre class="brush: cpp">  enum class Nibble : char { LOW, HIGH };
+
+  class Proxy {
+    Nibble which_;
+    unsigned char&amp; value_;
+
+  public:
+    Proxy(Nibble which, unsigned char&amp; value);
+
+    operator unsigned char() const;
+
+    Proxy&amp; operator=(unsigned char val);
+  };
+</pre>
+
+<p>The Proxy constructor is used above in <code>operator[]</code>.  Each Proxy object keeps track of whether it's representing the low or high nibble of the byte.  The byte in question from the <code>BigInt::value_</code> array is referred-to by the <code>Proxy::value_</code> reference.  When the <code>&amp;</code> symbol is used between the type and name in a declaration it indicates a reference and not a distinct object.  Note that it's used here for both the constructor's argument and the <code>Proxy::value_</code> data member.  (It's also used as the return type of <code>Proxy::operator=</code> by convention so that assignments can be chained.)  Apart from construction, Proxy objects support conversion to <code>unsigned char</code> for reading and assignment from <code>unsigned char</code> for writing.</p>
+<pre class="brush: cpp">BigInt::Proxy::Proxy(Nibble which, unsigned char&amp; value)
+  : which_(which)
+  , value_(value)
+{}
+
+BigInt::Proxy::operator unsigned char() const
+{
+  return (which_ == Nibble::LOW) ? value_ &amp; 0xf : (value_ &gt;&gt; 4);
+}
+
+BigInt::Proxy&amp; BigInt::Proxy::operator=(unsigned char val)
+{
+  if (val &gt; 9)
+  {
+    throw std::domain_error(&quot;value must be a single decimal digit&quot;);
+  }
+
+  value_ = (which_ == Nibble::LOW)
+    ? (value_ &amp; 0xf0) | val
+    : ((val &lt;&lt; 4) | (value_ &amp; 0xf));
+  return *this;
+}
+</pre>
+
+<p>The entire Proxy class is really just an implementation detail of the non-const <code>operator[]</code> shown above.  With the <code>operator[]</code>s in place, we can test them as follows:</p>
+<pre class="brush: cpp">TEST(Group1, PerDigitSubscript)
+{
+  BigInt b;
+  b[0] = 1;
+  b[1] = 2;
+  EXPECT_EQ(1, b[0]);
+  EXPECT_EQ(2, b[1]);
+  b[0] = 3;
+  EXPECT_EQ(3, b[0]);
+  EXPECT_EQ(2, b[1]);
+  b[1] = 4;
+  EXPECT_EQ(3, b[0]);
+  EXPECT_EQ(4, b[1]);
+}    
+</pre>
+
+<h2>Converting to and from Strings</h2>
+<p>Strings of decimal digits can be converted to and from BigInts.  Now that <code>operator[]</code> is available, it can be used to implement string conversions.  The following methods will be provided:</p>
+<pre class="brush: cpp">// within the class definition:
+
+explicit BigInt(const std::string&amp; str);
+
+explicit operator std::string() const;
+
+// outside the class definition:
+
+BigInt operator&quot;&quot;_bi(const char* str);
+
+std::ostream&amp; operator&lt;&lt;(std::ostream&amp; os, const BigInt&amp; bi);
+</pre>
+
+<p>In addition to the constructor from string and the conversion operator to string (which mirror the ones operating on integers), BigInt provides a <em>literal operator</em> which is invoked by the compiler when an integer literal has the suffix <code>_bi</code>.  The <code>*</code> between char and str indicates that str is a pointer to a character.  Though we prefer to deal with std::string objects, literal operators must use the raw (C-compatible) representation of a string as a pointer to the start of a run of contiguous characters in memory, ending with the 0-valued character.        </p>
+<p>The final operator in this group is the standard output stream insertion operator.  Providing this operator allows users to insert BigInt objects into any output stream.</p>
+<pre class="brush: cpp">BigInt::BigInt(const std::string&amp; str)
+{
+  auto digit = 0u;
+  std::for_each(str.rbegin(), str.rend(),
+                [&amp;](auto ch)
+                {
+                  (*this)[digit++] = ch - '0';
+                });
+}
+</pre>
+
+<p>Constructing a BigInt from a string of decimal digits involves iterating over the string in reverse (least significant first) and assigning each digit to the BigInt object which is under construction.</p>
+<pre class="brush: cpp">BigInt::operator std::string() const
+{
+  const auto s =
+    std::accumulate(value_.begin(), value_.end(), std::string{},
+                    [](auto result, auto slot)
+                    {
+                      const auto val = (slot &gt;&gt; 4) * 10 + (slot &amp; 0xf);
+                      if (!result.empty() || val)
+                      {
+                        result += std::to_string(val);
+                      }
+                      return result;
+                    });
+  return s.empty() ? &quot;0&quot; : s;
+}
+</pre>
+
+<p>Converting to a string makes use of <code>std::accumulate</code> for string concatenation instead of integer addition.  Traversing the <code>value_</code> array from most significant to least, digits are appended to the string at each step.  Complicating this implementation is the requirement that leading zeros are omitted from the string, but value 0 has a string representation of a single &quot;0&quot;.</p>
+<pre class="brush: cpp">BigInt operator&quot;&quot;_bi(const char* str)
+{
+  return BigInt{str};
+}
+
+std::ostream&amp; operator&lt;&lt;(std::ostream&amp; os, const BigInt&amp; bi)
+{
+  return os &lt;&lt; std::string(bi);
+}
+</pre>
+
+<p>The literal operator and stream insertion operators merely adapt the existing &quot;from&quot; and &quot;to&quot; string conversions for convenient use.  Examples can be seen in the unit tests:</p>
+<pre class="brush: cpp">TEST(Group1, ToAndFromString)
+{
+  const auto start = &quot;10987654321098765432109876543210&quot;s;
+  const BigInt b{start};
+  for (auto i = 0u; i &lt; 32; ++i)
+  {
+    EXPECT_EQ(i % 10, b[i]);
+  }
+  EXPECT_EQ(start, std::string{b});
+
+  const BigInt zero;
+  EXPECT_EQ(&quot;0&quot;s, std::string{zero});
+}
+
+TEST(Group1, UDLiteral)
+{
+  const auto b = 10987654321098765432109876543210_bi;
+  for (auto i = 0u; i &lt; 32; ++i)
+  {
+    EXPECT_EQ(i % 10, b[i]);
+  }
+}
+
+TEST(Group1, Streaming)
+{
+  const auto start = &quot;10987654321098765432109876543210&quot;s;
+  const BigInt b{start};
+  std::ostringstream oss;
+  oss &lt;&lt; b;
+  EXPECT_EQ(oss.str(), start);
+}
+</pre>
+
+<p>The standard library also provides a handful of user-defined literals which can be seen in use here: &quot;foo&quot;s is the <code>std::string</code> object containing &quot;foo&quot;.  User-defined literals that don't start with <code>_</code> are reserved for the standard library. </p>
+<h2>Addition</h2>
+<p>Many math operations are possible with BigInt, but this article will be limited to addition.  The same techniques and mechanisms can be applied to other operations (which can use either operators or named methods).</p>
+<pre class="brush: cpp">// within the class definition:
+BigInt&amp; operator+=(const BigInt&amp; rhs);
+
+// outside the class definition:
+BigInt operator+(const BigInt&amp; lhs, const BigInt&amp; rhs);
+</pre>
+
+<p>The += operator is the actual addition algorithm, whereas operator+ can simply delegate to += after copying its left-hand-side (lhs) operand.  The lhs operand of <code>operator+=</code> is the implicit <code>*this</code> (receiver object). </p>
+<pre class="brush: cpp">BigInt&amp; BigInt::operator+=(const BigInt&amp; rhs)
+{
+  auto carry = false;
+  for (size_t dig = 0; dig &lt; MAX_DIGITS; ++dig)
+  {
+    const auto val = (*this)[dig] + rhs[dig] + carry;
+    carry = val &gt; 9;
+    (*this)[dig] = val - (carry ? 10 : 0);
+  }
+
+  if (carry)
+  {
+    throw std::range_error(&quot;BigInt::operator+=&quot;);
+  }
+  return *this;
+}
+</pre>
+
+<p>Operator+= iterates over the decimal digits and performs the usual digit-by-digit addition.  The type of &quot;carry&quot; is bool but it's also used as an integer: false is 0 and true is 1.</p>
+<pre class="brush: cpp">BigInt operator+(const BigInt&amp; lhs, const BigInt&amp; rhs)
+{
+  BigInt result{lhs};
+  return result += rhs;
+}
+</pre>
+
+<p>And in the unit tests...</p>
+<pre class="brush: cpp">TEST(Group1, Addition)
+{
+  const auto b1 = 987654321_bi, b2 = 518670123_bi;
+  EXPECT_EQ(1506324444_bi, b1 + b2);
+}
+</pre>
+
+<h2>Comparison</h2>
+<p>All six logical comparison operators (==, !=, &lt;, &lt;=, &gt;, &gt;=) can be derived from just &lt; and ==, which will be shown here.  The complete class definition includes all six of them, and the unit test requires &gt;=.</p>
+<pre class="brush: cpp">// within the class definition:
+
+friend bool operator==(const BigInt&amp; lhs, const BigInt&amp; rhs);
+
+friend bool operator&lt;(const BigInt&amp; lhs, const BigInt&amp; rhs);
+</pre>
+
+<p>Although they are declared within the scope of the BigInt class definition, these operators are not members of the class.  The <code>friend</code> keyword means they belong to the same scope that BigInt belongs to but also have access to private members of BigInt.  We can see that in the .cpp file the operators are not prefixed with <code>BigInt::</code> (just like <code>operator+</code> above).</p>
+<pre class="brush: cpp">bool operator==(const BigInt&amp; lhs, const BigInt&amp; rhs)
+{
+  return lhs.value_ == rhs.value_;
+}
+
+bool operator&lt;(const BigInt&amp; lhs, const BigInt&amp; rhs)
+{
+  return lhs.value_ &lt; rhs.value_;
+}
+</pre>
+
+<p>It turns out that the <code>std::array value_</code> already provides the desired semantics for both == and &lt; (which is one reason to store the most significant digits at array index 0), so these functions delegate to <code>std::array</code>.</p>
+<pre class="brush: cpp">TEST(Group1, Comparison)
+{
+  EXPECT_LT(01_bi, 10_bi);
+  const std::set&lt;BigInt&gt; s = {98164507242435988_bi,
+                              98164507242435987_bi,
+                              84509843759803275139847591_bi,
+                              98316498317509815129845_bi,
+                              98316498317509815129845_bi,
+                              982175911123749829025982476911_bi};
+  BigInt largest;
+  for (const auto&amp; e: s)
+  {
+    EXPECT_GE(e, largest);
+    largest = e;
+  }
+}
+</pre>
+
+<p>This unit test uses the range-based for loop.  The variable &quot;e&quot; will refer to a different element of set &quot;s&quot; each time through the loop.  Since the elements of <code>std::set</code> are stored in order, this loop is used by the test to validate the &lt; operator's implementation.</p>
+
+
+
+<h2>Conclusions</h2>
+
+<p>
+Look back through the completed BigInt class and note that it has no named methods.  Everything it does is through an operator or constructor.  This isn't common, but it's to be expected in this case when we want BigInt to model built-in integers as much as possible.  This example shows the true extensibility of the C++ type system.  In the course of developing the BigInt class and its unit tests, we've seen the multiple paradigms that C++ supports work together naturally:</p>
+<ul>
+<li>Object-oriented: BigInt as a class</li>
+<li>Functional: use of lambdas in its implementation</li>
+<li>Generic: use of C++ standard library containers and algorithms</li>
+</ul>
+<p>The code presented here is not necessarily the most efficient implementation possible -- it was developed focused on correctness and demonstration of C++2014 features.  Future developments could focus on performance tuning (based on profiling) and extending the functionality to signed and fixed-point numbers.</p>
+<p>C++2011 and 2014 have many more new features that were not covered in this article.  The Cpp Reference wiki at <a href="http://en.cppreference.com">http://en.cppreference.com</a> shows all of those features in the language and standard library sections.  If you'd like to extend the BigInt class as an exercise in learning C++20011/2014, keep a browser tab open to Cpp Reference at all times.
+</p>
+
+<!--#include virtual="footer.shtml" -->
+<script src="http://alexgorbatchev.com/pub/sh/current/scripts/shCore.js" type="text/javascript"></script>
+<script src="http://alexgorbatchev.com/pub/sh/current/scripts/shAutoloader.js" type="text/javascript"></script>
+
+<script src="http://alexgorbatchev.com/pub/sh/current/scripts/shBrushJava.js" type="text/javascript"></script>
+<script src="http://alexgorbatchev.com/pub/sh/current/scripts/shBrushXml.js" type="text/javascript"></script>
+<script src="http://alexgorbatchev.com/pub/sh/current/scripts/shBrushPhp.js" type="text/javascript"></script>
+<script src="http://alexgorbatchev.com/pub/sh/current/scripts/shBrushScala.js" type="text/javascript"></script>
+<script src="http://alexgorbatchev.com/pub/sh/current/scripts/shBrushJScript.js" type="text/javascript"></script>
+<script src="http://alexgorbatchev.com/pub/sh/current/scripts/shBrushPlain.js" type="text/javascript"></script>
+<script src="http://alexgorbatchev.com/pub/sh/current/scripts/shBrushCpp.js" type="text/javascript"></script>
+<script src="http://alexgorbatchev.com/pub/sh/current/scripts/shBrushCSharp.js" type="text/javascript"></script>
+
+<script type="text/javascript">SyntaxHighlighter.all()</script>
+
+</body>
+</html>
